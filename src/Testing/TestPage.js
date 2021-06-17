@@ -1,14 +1,19 @@
-import React, {useState} from 'react'
-// import Modal from 'react-bootstrap/Modal'
-// import {Button} from "react-bootstrap";
+import React, {useEffect, useState} from 'react'
 import { Modal, Button, Alert } from 'react-bootstrap';
 import toastr from "toastr";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "toastr/build/toastr.min.css";
+import {Link} from "react-router-dom";
 
-export const TestPage = () => {
+import { connect } from 'react-redux'
+import { fetchUsers } from '../Redux'
+
+function TestPage ({ userData, fetchUsers }) {
+    useEffect(() => {
+        fetchUsers()
+    }, [])
+
     const [show, setShow] = useState(false);
-
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
     const handleToastr = () => {
@@ -32,14 +37,32 @@ export const TestPage = () => {
         toastr.success('Here is a success message with timeout.', 'Success Timeout Message', opts);
 
     }
-    return (
-        <>
+    return userData.loading ? (
+        <h2>Loading</h2>
+    ) : userData.error ? (
+        <h2>{userData.error}</h2>
+    ) : (
+        <div className={'container'}>
             <h1 className={'justify-text'}>Welcome to ReactJs</h1>
 
             <Button variant={'secondary'} onClick={handleToastr}>Show Toast Message</Button>
             <Button variant="primary" onClick={handleShow}>
                 Launch demo modal
             </Button>
+
+            <Link to={'/'}>
+                <Button variant="danger">
+                    GOTO Fetch Data Page
+                </Button>
+            </Link>
+
+            {userData &&
+                userData.users &&
+                userData.users.map(user =>
+                    <div className={'alert alert-danger'}>
+                        <div className={'badge badge-primary'}>{ user.name }</div>
+                    </div>
+                )}
 
             <Modal
                 show={show}
@@ -61,6 +84,23 @@ export const TestPage = () => {
                     <Button variant="primary">Understood</Button>
                 </Modal.Footer>
             </Modal>
-        </>
-    )
+        </div>
+    );
 }
+
+const mapStateToProps = state => {
+    return {
+        userData: state.user
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchUsers: () => dispatch(fetchUsers())
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TestPage)
